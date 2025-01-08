@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="header">
+    <div class="menu-icon" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <h1>AI Chatbot</h1>
+  </div>
+  <div class="menu" id="menu">
+    <button onclick="closeMenu()">⬅ Back</button>
+    <a href="#">📅 Chat History</a>
+    <a href="#">➕ New Chat</a>
+    <a href="#">⚙ Settings</a>
+    <a href="#">👤 Profile</a>
+    <a href="#">⏏ Logout</a>
+  </div>
+  <div class="chat-container">
+    <div id="chatBox" class="chat-box"></div>
+    <div class="input-container">
+      <input id="userInput" type="text" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const chatBox = document.getElementById('chatBox');
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      // Append user message to chat box
+      appendMessage('user', userMessage);
+      input.value = '';
+
+      try {
+        console.log("Sending message to API...");
+        const response = await fetch('http://127.0.0.1:7860/api/v1/run/fa9f82b4-dd7c-422f-b90d-b2cb0a72411f?stream=false', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input_value: userMessage,
+            output_type: "chat",
+            input_type: "chat",
+            tweaks: {
+              "Prompt-TU8YP": {},
+              "ChatOutput-g80BG": {},
+              "OllamaModel-5GaRe": {},
+              "AstraDB-8FRpN": {},
+              "OllamaEmbeddings-p839R": {},
+              "ChatInput-5oPvi": {},
+              "ParseData-uvqzi": {},
+              "File-f8xuN": {},
+              "SplitText-s8oxl": {},
+              "AstraDB-N06uh": {},
+              "OllamaEmbeddings-1Iq9O": {}
+            }
+          })
+        });
+
+        const data = await response.json();
+
+        // Log the full response to see its structure
+        console.log("Full Response from API:", JSON.stringify(data, null, 2));
+
+        // Check if 'outputs' exists and contains message text
+        if (data && data.outputs && data.outputs.length > 0 && data.outputs[0].outputs && data.outputs[0].outputs[0].results) {
+          const botReply = data.outputs[0].outputs[0].results.message.text || "No response text found in outputs.";
+          appendMessage('bot', botReply);
+        } else {
+          console.log("Unexpected response structure:", data);  // Log unexpected structure
+          appendMessage('bot', 'No output in response.');
+        }
+
+      } catch (error) {
+        console.error("Error during API call:", error);
+        appendMessage('bot', 'Error: Unable to connect to server.');
+      }
+    }
+
+    function appendMessage(sender, message) {
+      const chatBox = document.getElementById('chatBox');
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('chat-message', sender);
+      messageElement.textContent = message;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+
+
+
+
+
+
+</body>
+
+</html>
